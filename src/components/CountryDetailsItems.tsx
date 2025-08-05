@@ -2,23 +2,24 @@ import type { JSX } from "react";
 import { useParams, useNavigate } from "react-router";
 import NavBar from "../ui/NavBar";
 import type { Countries } from "../components/Type";
-import { useGetCountries } from "../../hooks/useCountries";
+import { useGetCountryByCode, useGetCountries } from "../../hooks/useCountries";
 import Message from "../ui/Message";
-
 import Spinner from "../ui/Spinner";
+import Map from "./Map";
 
 function CountryDetailsItems(): JSX.Element {
   const { code } = useParams<{ code: string }>();
   const navigate = useNavigate();
-  const { countries, isLoading, errors } = useGetCountries();
 
-  if (errors) return <Message message={`❌ countries could not be found`} />;
-  if (isLoading) return <Spinner />;
-  const country: Countries | undefined = countries.find((c) => c.cca2 === code);
+  const { country, isLoading, errors } = useGetCountryByCode(code);
 
-  if (!country) return <Message message="" />;
+  // Fetch minimal list to resolve border countries
+  const { countries } = useGetCountries();
 
-  // Extract currencies and languages
+  if (errors) return <Message message={`❌ ${errors}`} />;
+  if (isLoading || !country) return <Spinner />;
+
+  // Get currencies and languages
   const currencies = country.currencies
     ? Object.values(country.currencies)
         .map((c) => c.name)
@@ -29,18 +30,17 @@ function CountryDetailsItems(): JSX.Element {
     ? Object.values(country.languages).join(", ")
     : "N/A";
 
-  const getBorderCountries = () => {
-    if (!country.borders) return [];
-    return country.borders
-      .map((borderCode) =>
+  // Get border countries names
+  const borderCountries: Countries[] =
+    (country.borders
+      ?.map((borderCode) =>
         countries.find(
           (c) => c.cca3?.toUpperCase() === borderCode.toUpperCase(),
         ),
       )
-      .filter(Boolean) as Countries[];
-  };
+      .filter(Boolean) as Countries[]) || [];
 
-  const borderCountries = getBorderCountries();
+  const position: [number, number] = country.latlng ?? [0, 0];
 
   return (
     <>
@@ -65,7 +65,10 @@ function CountryDetailsItems(): JSX.Element {
 
             <p className="mt-2 font-bold">
               Native Name:{" "}
-              <span className="font-extralight">{country.name.common}</span>
+              <span className="font-extralight">
+                {Object.values(country.name.nativeName || {})[0]?.common ??
+                  country.name.common}
+              </span>
             </p>
             <p className="mt-2 font-bold">
               Population:{" "}
@@ -124,6 +127,8 @@ function CountryDetailsItems(): JSX.Element {
             )}
           </div>
         </div>
+
+        {position && <Map position={position} country={country} />}
       </div>
     </>
   );

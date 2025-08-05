@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
-import { type Countries } from "../src/components/Type";
 import { useSearchParams } from "react-router";
+import type { Countries } from "../src/components/Type";
 
-export const useGetCountries = function () {
+const BASE_URL = "https://restcountries.com/v3.1";
+
+const MINIMAL_FIELDS =
+  "cca2,cca3,name,population,region,capital,flags,borders,latlng,languages";
+
+export const useGetCountries = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [countries, setCountries] = useState<Countries[]>([]);
   const [errors, setErrors] = useState<string | null>(null);
@@ -11,23 +16,20 @@ export const useGetCountries = function () {
   const value = searchParams.get("region");
 
   useEffect(() => {
-    const getCountries = async function () {
+    const getCountries = async () => {
       setIsLoading(true);
       try {
         const url = value
-          ? `https://restcountries.com/v3.1/region/${value}`
-          : "https://restcountries.com/v3.1/all?fields=cca2,cca3,name,population,region,capital,flags,currencies,languages,borders";
+          ? `${BASE_URL}/region/${value}?fields=${MINIMAL_FIELDS}`
+          : `${BASE_URL}/all?fields=${MINIMAL_FIELDS}`;
+
         const res = await fetch(url);
-        if (!res.ok) throw new Error("countries can not bee found");
+        if (!res.ok) throw new Error("Countries could not be found");
+
         const data: Countries[] = await res.json();
         setCountries(data);
       } catch (error) {
-        if (error instanceof Error) {
-          console.error(error.message);
-          setErrors(error.message);
-        } else {
-          setErrors("An unknown error occurred");
-        }
+        setErrors(error instanceof Error ? error.message : "Unknown error");
       } finally {
         setIsLoading(false);
       }
@@ -36,4 +38,36 @@ export const useGetCountries = function () {
   }, [value]);
 
   return { isLoading, countries, errors };
+};
+
+/**
+ * Fetch full details for a single country by code
+ */
+export const useGetCountryByCode = (code: string | undefined) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [country, setCountry] = useState<Countries | null>(null);
+  const [errors, setErrors] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!code) return;
+
+    const getCountry = async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(`${BASE_URL}/alpha/${code}`);
+        if (!res.ok) throw new Error("Country could not be found");
+
+        const data: Countries[] = await res.json();
+        setCountry(data[0]);
+      } catch (error) {
+        setErrors(error instanceof Error ? error.message : "Unknown error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    getCountry();
+  }, [code]);
+
+  return { isLoading, country, errors };
 };

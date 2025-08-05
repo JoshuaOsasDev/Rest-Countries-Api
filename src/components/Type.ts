@@ -5,6 +5,13 @@ export type DisplayedCountriesProps = {
   displayedCountries: Countries[];
 };
 
+export type MapProps = {
+  position: [number, number];
+  country: Countries;
+};
+
+// FUNCTION
+
 export type Currency = {
   name: string;
   symbol: string;
@@ -47,4 +54,5 @@ export type Countries = {
   languages?: Languages;
   borders?: string[];
   cca3?: string;
+  latlng?: [number, number];
 };
