@@ -1,0 +1,26 @@
+@import "leaflet/dist/leaflet.css";
+@import url("https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap");
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* Light Mode */
+  --color-grey-950: hsl(200, 15%, 8%);
+  --color-grey-400: hsl(0, 0%, 50%);
+  --color-grey-50: hsl(0, 0%, 99%);
+
+  /* Dark Mode */
+  --color-blue-900: hsl(209, 23%, 22%);
+  --color-blue-950: hsl(207, 26%, 17%);
+  --color-white: hsl(0, 100%, 100%);
+
+  --font-sans: "Nunito Sans", sans-serif;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 400px;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
